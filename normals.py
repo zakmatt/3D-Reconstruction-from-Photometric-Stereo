@@ -3,7 +3,6 @@ from controllers import *
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy import linalg
 
 def load_all_images(file_name):
     with open(file_name, 'r') as file:
@@ -23,7 +22,7 @@ def load_all_images(file_name):
     return images, mask_image
 
 def normals(images, mask_image, light):
-    normal_map = np.zeros((mask_image.shape[0], mask_image.shape[1], 3))
+    normals_matrix = np.zeros((mask_image.shape[0], mask_image.shape[1], 3))
     i_vec = np.zeros(len(images))
     
     for (y, x), value in np.ndenumerate(mask_image):
@@ -36,15 +35,52 @@ def normals(images, mask_image, light):
             normal /= np.linalg.norm(normal)
             
             if not np.isnan(np.sum(normal)):
-                normal_map[y, x] = normal
+                normals_matrix[y, x] = normal
                           
-    return normal_map
+    return normals_matrix
+
+def albedo(images, mask_image, light, normals_matrix):
+    albedo_matrix = np.zeros((mask_image.shape[0], mask_image.shape[1], 3), dtype = np.float32)
+    i_vec = np.zeros((len(images), 3))
+    
+    for (y, x), value in np.ndenumerate(mask_image):
+        if value > 100.0:
+            for pos, image in enumerate(images):
+                i_vec[pos] = image[y, x]
+                
+            I_trans = np.dot(light, normals_matrix[y, x])
+            k = np.dot(np.transpose(i_vec), I_trans) / np.dot(I_trans, I_trans)
+            
+            if not np.isnan(np.sum(k)):
+                albedo_matrix[y, x] = k
+                             
+    return albedo_matrix
+    
+def compute_albedo(light_matrix, mask_array, images_array, normal_map, threshold=100):
+	shap = mask_array.shape
+	shaper = (shap[0], shap[1], 3)
+
+	albedo_map = np.zeros(shaper)
+	ivec = np.zeros((len(images_array), 3))
+
+	for (xT, value) in np.ndenumerate(mask_array):
+		if(value > threshold):
+			for (pos, image) in enumerate(images_array):
+				ivec[pos] = image[xT[0], xT[1]]
+
+			i_t = np.dot(light_matrix, normal_map[xT])
+
+			k = np.dot(np.transpose(ivec), i_t)/(np.dot(i_t, i_t))
+
+			if not np.isnan(np.sum(k)):
+				albedo_map[xT] = k
+
+	return albedo_map
 
 if __name__ == '__main__':
     light = np.loadtxt('light.txt', delimiter = ',')
     images, mask_image = load_all_images('psmImages/buddha.txt')
     normals_matrix = normals(images, mask_image, light)
-    #normals_rescaled = rescale(normals_matrix)
-    #normals_gray = cv2.cvtColor(normals_rescaled, cv2.COLOR_BGR2GRAY)
-    plt.imshow(normals_matrix)
-    plt.show()
+    albedo_matrix = albedo(images, mask_image, light, normals_matrix)
+    save_image(albedo_matrix, 'albedo.jpg')
+    save_image(normals_matrix, 'normals.jpg')
