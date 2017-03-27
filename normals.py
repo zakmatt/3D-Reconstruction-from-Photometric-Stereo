@@ -84,3 +84,5 @@ if __name__ == '__main__':
     albedo_matrix = albedo(images, mask_image, light, normals_matrix)
     save_image(albedo_matrix, 'albedo.jpg')
     save_image(normals_matrix, 'normals.jpg')
+    np.save('normals', normals_matrix)
+    np.save('albedos', albedo_matrix)
