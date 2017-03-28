@@ -4,23 +4,6 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def load_all_images(file_name):
-    with open(file_name, 'r') as file:
-        number_of_files = int(file.readline().rstrip())
-        images_paths = []
-        for i in range(number_of_files):
-            images_paths.append(file.readline().rstrip())
-        images_mask = file.readline().rstrip()
-    
-    images = []
-    for image_path in images_paths:
-        images.append(open_image(image_path))
-
-    mask_image = open_image(images_mask)
-    mask_image = cv2.cvtColor(mask_image, cv2.COLOR_BGR2GRAY)
-    
-    return images, mask_image
-
 def normals(images, mask_image, light):
     normals_matrix = np.zeros((mask_image.shape[0], mask_image.shape[1], 3))
     i_vec = np.zeros(len(images))
