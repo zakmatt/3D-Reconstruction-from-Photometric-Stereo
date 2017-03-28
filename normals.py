@@ -55,27 +55,6 @@ def albedo(images, mask_image, light, normals_matrix):
                 albedo_matrix[y, x] = k
                              
     return albedo_matrix
-    
-def compute_albedo(light_matrix, mask_array, images_array, normal_map, threshold=100):
-	shap = mask_array.shape
-	shaper = (shap[0], shap[1], 3)
-
-	albedo_map = np.zeros(shaper)
-	ivec = np.zeros((len(images_array), 3))
-
-	for (xT, value) in np.ndenumerate(mask_array):
-		if(value > threshold):
-			for (pos, image) in enumerate(images_array):
-				ivec[pos] = image[xT[0], xT[1]]
-
-			i_t = np.dot(light_matrix, normal_map[xT])
-
-			k = np.dot(np.transpose(ivec), i_t)/(np.dot(i_t, i_t))
-
-			if not np.isnan(np.sum(k)):
-				albedo_map[xT] = k
-
-	return albedo_map
 
 if __name__ == '__main__':
     light = np.loadtxt('light.txt', delimiter = ',')
