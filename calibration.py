@@ -3,6 +3,9 @@ from controllers import open_image
 import cv2
 import numpy as np
 
+# R = [0, 0, 1.0] based on the following page
+# http://pages.cs.wisc.edu/~csverma/CS766_09/Stereo/stereo.html
+
 with open('psmImages/chrome.txt', 'r') as file:
     number_of_files = int(file.readline().rstrip())
     images_paths = []
@@ -36,9 +39,12 @@ for image in images:
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     max_val = np.max(image)
     coords = np.argwhere(image == max_val)
-    n_size = len(coords)
-    py = np.sum(coords[:,0]) * 1.0 / n_size
-    px = np.sum(coords[:,1]) * 1.0 / n_size
+    y_min = np.min(coords[:, 0])
+    y_max = np.max(coords[:, 0])
+    x_min = np.min(coords[:, 1])
+    x_max = np.max(coords[:, 1])
+    py = (y_max + y_min)/2.0
+    px = (x_max + x_min)/2.0
     
     dx = px - x_centre
     dy = -(py - y_centre) # - to make it non-negative
@@ -47,7 +53,6 @@ for image in images:
     normal = np.array([dx, dy, dz])
     normal /= radius
     
-    NR = normal[0] * R[0] + normal[1] * R[1] + normal[2] * R[2]
     l = 2 * np.dot(normal, R) * normal - R
     l = np.round(l, decimals = 6)
     L.append(l)
