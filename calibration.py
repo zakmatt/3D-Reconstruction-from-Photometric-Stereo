@@ -57,4 +57,5 @@ for image in images:
     l = np.round(l, decimals = 6)
     L.append(l)
 
+L = np.array(L)
 np.savetxt('light.txt', L, delimiter=',')

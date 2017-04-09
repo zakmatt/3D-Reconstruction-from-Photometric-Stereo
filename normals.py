@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from controllers import *
+from controllers import load_all_images, save_image
 import cv2
 import numpy as np
     
@@ -15,8 +15,13 @@ def normals(images, mask_image, light):
                 image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                 I[pos] = image[y, x]
                 
-            #[dx, dy, dz]    
-            normal, _, _, _ = np.linalg.lstsq(light, I)
+            #[dx, dy, dz]
+            L = light.copy()
+            L[:, 0] *= I
+            L[:, 1] *= I
+            L[:, 2] *= I
+            I *= I
+            normal, _, _, _ = np.linalg.lstsq(L, I)
             normal /= np.linalg.norm(normal)
             
             if not np.isnan(np.sum(normal)):
@@ -46,7 +51,7 @@ def albedo(images, mask_image, light, normals_matrix):
 
 if __name__ == '__main__':
     light = np.loadtxt('light.txt', delimiter = ',')
-    images, mask_image = load_all_images('psmImages/cat.txt')
+    images, mask_image = load_all_images('psmImages/horse.txt')
     normals_matrix = normals(images, mask_image, light)
     albedo_matrix = albedo(images, mask_image, light, normals_matrix)
     save_image(albedo_matrix, 'albedo.jpg')
